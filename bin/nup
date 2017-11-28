@@ -1,0 +1,1 @@
+pio run --target upload -e nanoatmega328 --upload-port /dev/cu.usbserial-AH0266WE

@@ -1,0 +1,29 @@
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial BTSerial(2,3); // CONNECT BT RX PIN TO ARDUINO 11 PIN | CONNECT BT TX PIN TO ARDUINO 10 PIN
+
+void setup() 
+{
+  // pinMode(9, OUTPUT);  // this pin will pull the HC-05 pin 34 (key pin) HIGH to switch module to AT mode
+  // digitalWrite(9, HIGH); 
+  Serial.begin(9600);
+  Serial.println("Connected via USB");
+  // BTSerial.begin(38400);  // HC-05 default speed in AT command more
+  BTSerial.begin(9600);  // HC-05 default speed in AT command more
+  BTSerial.println("Cnnected vit Bluetooth");
+
+  pinMode(13, OUTPUT);
+}
+
+// WORKS AS EXPECTED (umon2, btmon)
+void loop()
+{
+  delay(1000);
+  BTSerial.println("Cnnected vit Bluetooth");
+  Serial.println("Connected via USB");
+
+  digitalWrite(13, HIGH);
+  delay(1000);
+  digitalWrite(13, LOW);
+}

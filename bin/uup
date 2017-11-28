@@ -1,0 +1,2 @@
+sed -i -e "s/bool master = true/bool master = false/g" /Users/nolan/src/arduino/timer/src/main.cpp
+pio run --target upload -e uno --upload-port /dev/cu.usbmodem40131

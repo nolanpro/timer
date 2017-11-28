@@ -1,0 +1,173 @@
+#include <Arduino.h>
+#include <SPI.h>
+#include <RF24.h> // NRF24L01+
+
+
+///////////
+// master has greentooth / old arduino / uup2
+bool master = false;
+///////////
+
+
+int photocellPin = A1;
+int photocellReading;
+int LEDpin = 5;
+int threshold = 500;
+RF24 radio(9,10);
+byte addresses[][6] = {"1Curl","2Curl"};
+
+bool isLaserOn() {
+  photocellReading = analogRead(photocellPin);  
+  if (photocellReading > threshold) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void ledOn() {
+  digitalWrite(LEDpin, HIGH);
+}
+
+void ledOff() {
+  digitalWrite(LEDpin, LOW);
+}
+
+void flashOnce() {
+  ledOn();
+  delay(100);
+  ledOff();
+  delay(100);
+}
+
+void flash() {
+  for (int i = 0; i < 5; i++) {
+    flashOnce();
+  }
+}
+
+void calibrate() {
+  if (isLaserOn()) {
+    ledOn();
+  } else {
+    ledOff();
+  }
+}
+
+void send(unsigned long thing) {
+  Serial.println("Now sending: " + String(thing));
+  if (!radio.write(&thing, sizeof(unsigned long)))
+  {
+    Serial.println("failed");
+  }
+
+}
+
+unsigned long receive() {
+  unsigned long started_waiting_at = micros(); // Set up a timeout period, get the current microseconds
+  boolean timeout = false;
+
+  while (!radio.available())
+  {
+    if (micros() - started_waiting_at > 200000)
+    {
+      timeout = true;
+      break;
+    }
+  }
+
+  if (timeout)
+  {
+    Serial.println("Failed, response timed out.");
+  }
+  else
+  {
+    unsigned long response;
+    radio.read(&response, sizeof(unsigned long));
+    return response;
+  }
+
+}
+
+void runMasterRadio() {
+  radio.stopListening();
+  unsigned long start_time = micros();
+  Serial.println("Start_time is now " + String(start_time));
+  ledOn();
+
+  send(start_time);
+  radio.startListening();
+
+  unsigned long got_time = receive();
+  Serial.println("Got response " + String(got_time));
+
+  unsigned long end_time = micros();
+
+  // Serial.print(F(", Round-trip delay "));
+  // Serial.print(end_time - start_time);
+  ledOff();
+  // Serial.println(F(" microseconds"));
+
+  Serial.println("Waiting 1s");
+  delay(1000);
+}
+
+void runSlaveRadio() {
+
+  calibrate();
+  return;
+  // Serial.println("STARTING SLAVE");
+  unsigned long got_time;
+
+  if (radio.available())
+  {
+    while (radio.available())
+    {
+      radio.read(&got_time, sizeof(unsigned long));
+    }
+
+    radio.stopListening();
+
+    delay(500);
+    send(got_time);
+
+
+    radio.startListening();
+    Serial.print(F("Sent response "));
+    flashOnce();
+    Serial.println(got_time);  
+  }
+}
+
+///////////////////////////////////////////////
+
+void setup(void) {
+  // debugging only
+  Serial.begin(9600);
+
+  pinMode(photocellPin, INPUT);
+  pinMode(LEDpin, OUTPUT);
+  digitalWrite(LEDpin, LOW);
+  flash();
+
+  // RADIO
+  radio.begin();
+  if (master){
+    radio.openWritingPipe(addresses[1]);
+    radio.openReadingPipe(1,addresses[0]);
+  } else {
+    radio.openWritingPipe(addresses[0]);
+    radio.openReadingPipe(1,addresses[1]);
+  }
+  radio.startListening();
+}
+
+void loop(void) {
+  if (master) {
+    runMasterRadio();
+  } else {
+    runSlaveRadio();
+  }
+  // delay(100);
+}
+
