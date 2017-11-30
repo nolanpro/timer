@@ -6,7 +6,7 @@
 
 ///////////
 // master has greentooth / old arduino / uup2
-bool master = false;
+bool master = true;
 ///////////
 
 // Modes
@@ -90,29 +90,6 @@ void send(dataStruct thing) {
   }
 }
 
-// void receive() {
-//   unsigned long started_waiting_at = micros();
-//   boolean timeout = false;
-
-//   while (!radio.available())
-//   {
-//     if (micros() - started_waiting_at > 200000)
-//     {
-//       timeout = true;
-//       break;
-//     }
-//   }
-
-//   if (timeout)
-//   {
-//     Serial.println("Failed, response timed out.");
-//   }
-//   else
-//   {
-//     radio.read(&data, sizeof(unsigned long));
-//   }
-// }
-
 void waitForFirstTrigger() {
   if (radio.available()) {
     while(radio.available()) {
@@ -157,9 +134,11 @@ void runMasterRadio() {
     Serial.println("Got BT signal");
     char val = BTSerial.read();
     if (val == 'D') {
+      Serial.println("Setting controlMode to 0");
       controlMode = 0;
     }
     if (val == 'R') {
+      Serial.println("Setting controlMode to 1");
       controlMode = 1;
     }
   }
@@ -231,7 +210,6 @@ void runMasterRadio() {
     if (totalTime > 0) {
       // we have a result!
       Serial.println("Sending result to BT: " + String(totalTime));
-      BTSerial.println("RESULT:");
       BTSerial.println(totalTime);
 
       delay(1000);
