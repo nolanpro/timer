@@ -98,7 +98,6 @@ void waitForFirstTrigger() {
     if (data.mode == 7) {
       startTriggerTime = micros();
       BTSerial.println("FirstTrigger");
-      Serial.println("MASTER GOT MODE FROM SLAVE RADIO" + String(data.mode));
     }
     if (data.mode == 8) {
       Serial.println("Error: recieved timeout from slave");
@@ -113,6 +112,7 @@ void waitForSecondTrigger() {
     checkTime = micros();
     if (checkTime - startTriggerTime > 6000000) { // 6 seconds
       timeout = true;
+      BTSerial.println("Timeout6");
       Serial.println("ERROR: Master timed out after 6 seconds");
       break;
     }
@@ -195,8 +195,9 @@ void runMasterRadio() {
         }
       } else {
         checkTime = micros();
-        if (checkTime - startTimeout > 35000000) {
-          Serial.println("ERROR: Master timeout after 35 seconds, resetting to calibrate");
+        if (checkTime - startTimeout > 30000000) {
+          Serial.println("ERROR: Master timeout after 30 seconds, resetting to calibrate");
+          BTSerial.println("Timeout30");
           mode = 5;
           data.mode = 5;
           controlMode = 0;
